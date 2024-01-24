@@ -1,0 +1,6 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./crates/plugins/scaleway/Cargo.toml",
+        "./crates/plugins/scaleway/Cargo.toml"
+    ]
+}
