@@ -1,6 +1,6 @@
-.PHONY: all build dev build_scaleway 
+.PHONY: all build dev  build-plugin-scaleway build-plugin-scaleway-dev copy-plugin-scaleway docs docs-serve
 
-all: build build_plugin_scaleway
+all: build build-plugin-scaleway
 
 
 clippy:
@@ -11,12 +11,31 @@ build:
 	@echo "Building binary"
 	@cargo build --release
 
-dev: 
+build-dev:  build-plugin-scaleway-dev copy-plugin-scaleway
+	@echo "Building binary"
+	@cargo build
+
+dev:  build-plugin-scaleway-dev copy-plugin-scaleway
 	@echo "Building binary"
 	@cargo clippy
 	@cargo build
 
-build_plugin_scaleway:
+build-plugin-scaleway:
 	@echo "Building plugin: scaleway"
 	@cd crates/plugins/scaleway && cargo build --release
 
+build-plugin-scaleway-dev:
+	@echo "Building plugin: scaleway"
+	@cd crates/plugins/scaleway && cargo build
+
+copy_plugin_scaleway:
+	@echo "Copying plugin: scaleway"
+	@cp target/wasm32-unknown-unknown/debug/scaleway.wasm assets/config/plugins/scaleway.wasm
+
+docs:
+	@echo "Building docs"
+	@cd docs && mdbook build
+
+docs-serve:
+	@echo "Serving docs"
+	@cd docs && mdbook serve
