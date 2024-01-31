@@ -1,0 +1,18 @@
+{
+    "functions": [
+        {
+            "name": "test",
+            "params": [
+                {
+                    "name": "a",
+                    "type": "int"
+                },
+                {
+                    "name": "b",
+                    "type": "int"
+                }
+            ],
+            "return": "int"
+        }
+    ]
+}
