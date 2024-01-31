@@ -1,0 +1,6 @@
+[book]
+authors = ["Victor Palade"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Skycrane"
