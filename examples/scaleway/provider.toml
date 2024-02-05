@@ -1,0 +1,4 @@
+provider = scaleway
+version = "v0.1"
+sha256 = ""
+fullpath = ""
