@@ -1,4 +1,5 @@
 .PHONY: all build dev  build-plugin-scaleway build-plugin-scaleway-dev copy-plugin-scaleway docs docs-serve
+SKYCRANE_ASSETS_PATH := ./assets
 
 all: build build-plugin-scaleway
 
@@ -11,14 +12,19 @@ build:
 	@echo "Building binary"
 	@cargo build --release
 
-build-dev:  build-plugin-scaleway-dev copy-plugin-scaleway
+build-dev: build-plugin-scaleway-dev copy-plugin-scaleway
 	@echo "Building binary"
 	@cargo build
 
-dev:  build-plugin-scaleway-dev copy-plugin-scaleway
+dev: build-plugin-scaleway-dev copy-plugin-scaleway
 	@echo "Building binary"
 	@cargo clippy
 	@cargo build
+
+clean: 
+	@echo "Cleaning"
+	@cargo clean
+	@rm -rf assets/config/plugins/scaleway.wasm
 
 build-plugin-scaleway:
 	@echo "Building plugin: scaleway"

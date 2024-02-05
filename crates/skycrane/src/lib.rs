@@ -1,12 +1,51 @@
+mod commands;
+mod wasm;
+
+pub use commands::{apply, destroy, init, reconcile};
+pub use wasm::engine::init_plugins;
+pub use wasm::plugins::{load_plugins, PluginsSchema, WasmPlugin, INTERFACE_SCHEMA};
+
 use std::env;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Clone, Debug)]
 pub struct Cli {
-    #[structopt(short, long, default_value = "~/.config/skycrane", parse(from_str = expand_path))]
-    config_path: PathBuf,
+    /// The path to the configuration directory, this is where skycrane keeps its main config as well
+    /// as the modules directory.
+    #[structopt(short, long, default_value = "~/.config/skycrane", parse(from_str = expand_path), env = "SKYCRANE_CONFIG_PATH")]
+    pub config_path: PathBuf,
+    #[structopt(subcommand)]
+    pub commands: Commands,
+    /// The log level to use, available levels are: trace, debug, info, warn, error
+    #[structopt(
+        long = "log-level",
+        default_value = "info",
+        possible_values = &["trace", "debug", "info", "warn", "error"],
+        env = "SKYCRANE_LOG_LEVEL"
+    )]
+    pub log_level: String,
 }
+
+#[derive(StructOpt, Clone, Debug)]
+pub enum Commands {
+    Init(Init),
+    Apply(Apply),
+    Reconcile(Reconcile),
+    Destroy(Destroy),
+}
+
+#[derive(StructOpt, Clone, Debug)]
+pub struct Apply {}
+
+#[derive(StructOpt, Clone, Debug)]
+pub struct Init {}
+
+#[derive(StructOpt, Clone, Debug)]
+pub struct Reconcile {}
+
+#[derive(StructOpt, Clone, Debug)]
+pub struct Destroy {}
 
 fn expand_path(path_str: &str) -> PathBuf {
     if path_str.starts_with('~') {
@@ -22,7 +61,6 @@ fn expand_path(path_str: &str) -> PathBuf {
     }
     PathBuf::from(path_str)
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
