@@ -36,3 +36,8 @@ Skycrane supports the following cloud providers:
 $ cargo install skycrane
 ...
 ```
+
+
+## Architectural overview
+
+<img src="assets/images/skycrane-architecture.svg" width="700">
