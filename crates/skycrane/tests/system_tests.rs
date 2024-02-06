@@ -1,6 +1,5 @@
 use anyhow::Ok;
 use once_cell::sync::OnceCell;
-use skycrane::load_plugins;
 
 static INIT: OnceCell<()> = OnceCell::new();
 
