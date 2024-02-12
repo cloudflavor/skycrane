@@ -58,4 +58,4 @@ docs-serve:
 
 test:
 	@echo "Running tests"
-	@cargo test --verbose
+	@cargo test

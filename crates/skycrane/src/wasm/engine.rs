@@ -1,7 +1,7 @@
 use crate::wasm::plugins::validate_interface;
 use crate::WasmPlugin;
 use anyhow::Result;
-use tracing::{debug, error};
+use tracing::error;
 use wasmtime::{Engine, Instance, Module, Store};
 
 pub fn init_plugins(plugins: Vec<WasmPlugin>) -> Result<Vec<Instance>> {
@@ -21,7 +21,6 @@ pub fn init_plugins(plugins: Vec<WasmPlugin>) -> Result<Vec<Instance>> {
             continue;
         }
         instances.push(instance);
-        debug!("Loaded {} plugins", instances.len());
     }
 
     Ok(instances)
