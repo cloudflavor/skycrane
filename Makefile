@@ -1,25 +1,24 @@
-.PHONY: all build dev  build-plugin-scaleway build-plugin-scaleway-dev copy-plugin-scaleway docs docs-serve
+.PHONY: all build dev docs docs-serve
 
 CURRENT_DIR=$(shell pwd)
 
 export SKYCRANE_ASSETS_PATH=${CURRENT_DIR}/assets
 
-all: build build-plugin-scaleway
-
+all: build
 
 clippy:
 	@echo "Running clippy"
 	@cargo clippy --all-targets --all-features -- -D warnings
 
-build:  build-plugin-scaleway copy-plugin-scaleway
+build:   
 	@echo "Building binary"
 	@cargo build --release
 
-build-dev: build-plugin-scaleway-dev copy-plugin-scaleway
+build-dev: copy-plugin-scaleway
 	@echo "Building binary"
 	@cargo build
 
-dev: build-plugin-scaleway-dev copy-plugin-scaleway
+dev:
 	@echo "Building binary"
 	@cargo clippy
 	@cargo build
@@ -27,26 +26,7 @@ dev: build-plugin-scaleway-dev copy-plugin-scaleway
 clean: 
 	@echo "Cleaning"
 	@cargo clean
-	@rm -rf assets/plugins/scaleway.wasm || true
 	@rm -rf target || true
-	@rm -rf creates/skycrane/target || true
-	@rm -rf creates/plugins/scaleway/target || true
-
-build-plugin-scaleway:
-	@echo "Building plugin: scaleway"
-	@cd crates/plugins/scaleway && cargo build --release
-
-build-plugin-scaleway-dev:
-	@echo "Building plugin: scaleway"
-	@cd crates/plugins/scaleway && cargo build
-
-copy-plugin-scaleway-dev:
-	@echo "Copying plugin: scaleway"
-	@cp target/wasm32-unknown-unknown/debug/scaleway.wasm assets/plugins/
-
-copy-plugin-scaleway:
-	@echo "Copying plugin: scaleway"
-	@cp target/wasm32-unknown-unknown/release/scaleway.wasm assets/plugins/
 
 docs:
 	@echo "Building docs"
