@@ -2,7 +2,7 @@
 
 CURRENT_DIR=$(shell pwd)
 
-export SKYCRANE_ASSETS_PATH=${CURRENT_DIR}/assets
+export SKYCRANE_SPEC_PATH=${CURRENT_DIR}/spec
 
 all: build
 
@@ -10,15 +10,19 @@ clippy:
 	@echo "Running clippy"
 	@cargo clippy --all-targets --all-features -- -D warnings
 
-build:   
+get-spec:
+	@echo "Downloading spec"
+	@wget --quiet https://raw.githubusercontent.com/cloudflavor/skyforge/main/spec/plugins-interface.json -O spec/plugins-interface.json
+
+build: get-spec
 	@echo "Building binary"
 	@cargo build --release
 
-build-dev: copy-plugin-scaleway
+build-dev: get-spec
 	@echo "Building binary"
 	@cargo build
 
-dev:
+dev: get-spec
 	@echo "Building binary"
 	@cargo clippy
 	@cargo build
@@ -27,6 +31,7 @@ clean:
 	@echo "Cleaning"
 	@cargo clean
 	@rm -rf target || true
+	@rm -rf spec/plugins-interface.json || true
 
 docs:
 	@echo "Building docs"

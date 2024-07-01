@@ -17,11 +17,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Install latest nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: rustfmt, clippy
     - name: Install deps
       run: |
         sudo apt-get update
-        sudo apt-get install -y make gcc g++ libssl-dev pkg-config
+        sudo apt-get install -y make gcc g++ libssl-dev pkg-config wget
+    - name: Fetch wasm plugin spec
+      run: |
+        wget https://raw.githubusercontent.com/cloudflavor/skyforge/main/spec/plugins-interface.json -O spec/plugins-interface.json
+    - name: Set env var
+      run: echo "SKYCRANE_SPEC_PATH=$(pwd)/spec" >> $GITHUB_ENV
     - name: Build skycrane
-      run: make build
+      run: cargo build
     - name: Run tests
-      run: make test
+      run: cargo test
