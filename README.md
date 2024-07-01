@@ -14,21 +14,9 @@
 
 ---
 
-Skycrane supports the following cloud providers:
-
-
-| Provider | Status |
-| --- | --- |
-| <img src="assets/images/scaleway.svg" width="50" height="50"> [Scaleway](https://www.scaleway.com/) | In progress |
-
-
-## Supported resources
-
 ## Installation
 
 ```shell
 $ cargo install skycrane
 ...
 ```
-
-
