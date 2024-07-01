@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 }
 
 #[derive(RustEmbed)]
-#[folder = "$SKYCRANE_ASSETS_PATH/spec"]
+#[folder = "$SKYCRANE_SPEC_PATH"]
 struct Assets;
 
 async fn load_schema() -> Result<()> {
