@@ -1,26 +1,9 @@
 use crate::init_plugins;
-use anyhow::{Context, Result};
-use once_cell::sync::OnceCell;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use tracing::{debug, error};
-use wasmtime::{Instance, Store};
-
-pub static INTERFACE_SCHEMA: OnceCell<PluginsSchema> = OnceCell::new();
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PluginsSchema {
-    funcs: Vec<FunctionSpec>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct FunctionSpec {
-    name: String,
-    params: HashMap<String, String>,
-    returns: String,
-}
+use wasmtime::Instance;
 
 #[derive(Clone, Debug)]
 pub struct WasmPlugin {
@@ -61,50 +44,4 @@ async fn read_plugins(modules_path: PathBuf) -> Result<Vec<WasmPlugin>> {
     }
 
     Ok(modules)
-}
-
-pub fn validate_interface(store: &mut Store<()>, instance: &Instance) -> Result<()> {
-    let schema = INTERFACE_SCHEMA.get().context("interface schema not set")?;
-
-    for func_spec in &schema.funcs {
-        let func = instance
-            .get_func(&mut *store, &func_spec.name)
-            .with_context(|| {
-                format!(
-                    "failed to get function {} from plugin {:?}",
-                    func_spec.name, instance,
-                )
-            })?;
-
-        let ty = func.ty(&store);
-        let params = ty.params();
-        params.into_iter().enumerate().try_for_each(|(i, ty)| {
-            let param_key = i.to_string();
-            let expected_ty_str = func_spec.params.get(&param_key).context(format!(
-                "parameter key {param_key} not found in function specification"
-            ))?;
-
-            if *expected_ty_str != ty.to_string() {
-                return Err(anyhow::anyhow!(
-                    "parameter type mismatch, expected {expected_ty_str}, got {}",
-                    ty.to_string()
-                ));
-            }
-
-            Ok(())
-        })?;
-
-        let return_type = ty.results().next();
-        if let Some(return_type) = return_type {
-            let returns = func_spec.returns.as_str();
-            if return_type.to_string() != returns {
-                return Err(anyhow::anyhow!(
-                    "return type mismatch, expected {returns}, got {}",
-                    return_type.to_string(),
-                ));
-            }
-        }
-    }
-
-    Ok(())
 }

@@ -1,25 +1,31 @@
-use crate::wasm::plugins::validate_interface;
 use crate::WasmPlugin;
-use anyhow::Result;
-use tracing::error;
-use wasmtime::{Engine, Instance, Module, Store};
+use anyhow::{Context, Result};
+use tracing::info;
+use wasi_common::sync::{add_to_linker, WasiCtxBuilder};
+use wasmtime::*;
 
 pub fn init_plugins(plugins: Vec<WasmPlugin>) -> Result<Vec<Instance>> {
     let mut instances = Vec::new();
     let engine = Engine::default();
-    let mut store = Store::new(&engine, ());
+    let mut linker = Linker::new(&engine);
+    add_to_linker(&mut linker, |s| s).with_context(|| "Failed to add WASI to linker")?;
+    let wasi_ctx = WasiCtxBuilder::new().inherit_stdio().inherit_env()?.build();
+    let mut store = Store::new(&engine, wasi_ctx);
 
     for plugin in plugins {
         let module = Module::from_file(&engine, &plugin.path)?;
-        // NOTE: maybe at some point we want to pass in some imports for the plugins
-        let instance = Instance::new(&mut store, &module, &[])?;
-        if let Err(err) = validate_interface(&mut store, &instance) {
-            error!(
-                "Failed to validate interface for plugin {:?}: {err}",
-                plugin.name
-            );
-            continue;
-        }
+        linker.module(&mut store, &plugin.name, &module)?;
+        let instance = linker.instantiate(&mut store, &module)?;
+        instance
+            .get_func(&mut store, "plugin-api#deserialize-config")
+            .unwrap();
+
+        info!(
+            "Successfully validated: {} from: {}",
+            plugin.name,
+            plugin.path.display()
+        );
+
         instances.push(instance);
     }
 

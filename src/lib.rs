@@ -3,7 +3,7 @@ mod wasm;
 
 pub use commands::{apply, destroy, init, reconcile};
 pub use wasm::engine::init_plugins;
-pub use wasm::plugins::{load_plugins, PluginsSchema, WasmPlugin, INTERFACE_SCHEMA};
+pub use wasm::plugins::{load_plugins, WasmPlugin};
 
 use std::env;
 use std::path::PathBuf;

@@ -1,8 +1,5 @@
 use anyhow::{Context, Result};
-use rust_embed::RustEmbed;
-use skycrane::{
-    apply, destroy, init, load_plugins, reconcile, Cli, Commands, PluginsSchema, INTERFACE_SCHEMA,
-};
+use skycrane::{apply, destroy, init, load_plugins, reconcile, Cli, Commands};
 use structopt::StructOpt;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
@@ -22,7 +19,6 @@ async fn main() -> Result<()> {
     tracing::subscriber::set_global_default(subscriber)?;
 
     debug!("loading with opts: {:#?}", &opts);
-    load_schema().await?;
 
     let instances = load_plugins(opts.config_path.clone())
         .await
@@ -39,25 +35,6 @@ async fn main() -> Result<()> {
         Commands::Reconcile(_) => reconcile(&opts)?,
         Commands::Destroy(_) => destroy(&opts)?,
     }
-
-    Ok(())
-}
-
-#[derive(RustEmbed)]
-#[folder = "$SKYCRANE_SPEC_PATH"]
-struct Assets;
-
-async fn load_schema() -> Result<()> {
-    let spec_file = Assets::get("plugins-interface.json")
-        .with_context(|| "Failed to load plugins-interface.json from virtual fs")?;
-
-    let data = spec_file.data.as_ref();
-
-    let plugins_schema = serde_json::from_slice::<PluginsSchema>(data)
-        .with_context(|| "Failed to parse interface schema")?;
-
-    INTERFACE_SCHEMA.set(plugins_schema).unwrap(); // TODO: Fix me!
-    debug!("Loaded interface schema: {:#?}", INTERFACE_SCHEMA);
 
     Ok(())
 }
