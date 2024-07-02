@@ -1,31 +1,40 @@
-use crate::init_plugins;
-use anyhow::Result;
+use crate::init_plugin;
+use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 use tokio::fs;
-use tracing::{debug, error};
+use tracing::error;
 use wasmtime::Instance;
 
 #[derive(Clone, Debug)]
 pub struct WasmPlugin {
     pub name: String,
     pub path: PathBuf,
+    pub instance: Option<Instance>,
 }
 
-pub async fn load_plugins<P: AsRef<Path>>(config_path: P) -> Result<Vec<Instance>> {
-    let plugins = read_plugins(config_path.as_ref().join("plugins")).await?;
-
-    if plugins.is_empty() {
-        anyhow::bail!("No plugins found in {:?}", config_path.as_ref());
+pub async fn load_plugin<P: AsRef<Path>>(config_path: P, name: &str) -> Result<WasmPlugin> {
+    if let Some(mut plugin) = read_plugins(config_path.as_ref().join("plugins"), name)
+        .await
+        .with_context(|| {
+            format!(
+                "Failed to read plugins from {:?}",
+                config_path.as_ref().join("plugins")
+            )
+        })?
+    {
+        init_plugin(&mut plugin)
+            .with_context(|| format!("Failed to init plugin: {}", plugin.name))?;
+        Ok(plugin)
+    } else {
+        anyhow::bail!(
+            "No plugins found in {:?}",
+            config_path.as_ref().join("plugins")
+        );
     }
-
-    debug!("Found {} wasm plugin(s): {:#?}", plugins.len(), plugins);
-
-    init_plugins(plugins)
 }
-
-async fn read_plugins(modules_path: PathBuf) -> Result<Vec<WasmPlugin>> {
+// TODO: make this function return just Option<WasmpPlugin> instead of Result<Option<WasmPlugin>>
+async fn read_plugins(modules_path: PathBuf, plugin_name: &str) -> Result<Option<WasmPlugin>> {
     let mut dir = fs::read_dir(&modules_path).await?;
-    let mut modules = Vec::new();
 
     while let Some(entry) = dir.next_entry().await? {
         let path = entry.path();
@@ -33,15 +42,17 @@ async fn read_plugins(modules_path: PathBuf) -> Result<Vec<WasmPlugin>> {
 
         if let Some(file_name) = file_name_opt {
             if file_name.ends_with(".wasm") {
-                modules.push(WasmPlugin {
-                    name: file_name.to_string(),
-                    path,
-                });
+                if file_name.contains(plugin_name) {
+                    return Ok(Some(WasmPlugin {
+                        name: file_name.to_string(),
+                        path,
+                        instance: None,
+                    }));
+                }
             }
         } else {
             error!("Invalid file name for path: {:?}", path);
         }
     }
-
-    Ok(modules)
+    Ok(None)
 }

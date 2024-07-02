@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use skycrane::{apply, destroy, init, load_plugins, reconcile, Cli, Commands};
+use skycrane::{apply, destroy, init, load_plugin, reconcile, Cli, Commands};
 use structopt::StructOpt;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
 
     debug!("loading with opts: {:#?}", &opts);
 
-    let instances = load_plugins(opts.config_path.clone())
+    let plugin = load_plugin(opts.config_path.clone(), "hetzner") // TODO: Fix me, this should come from the starlark file.
         .await
         .with_context(|| {
             format!(
@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
         })?;
 
     match opts.commands {
-        Commands::Init(_) => init(&opts, instances.first().unwrap().to_owned()).await?, // TODO: Fix me!
+        Commands::Init(_) => init(&opts, plugin).await?, // TODO: Fix me!
         Commands::Apply(_) => apply(&opts)?,
         Commands::Reconcile(_) => reconcile(&opts)?,
         Commands::Destroy(_) => destroy(&opts)?,
