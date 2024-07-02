@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SKYCRANE_ASSETS_PATH: assets
 
 jobs:
   build:
@@ -20,18 +19,15 @@ jobs:
     - name: Install latest nightly
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: stable
+        toolchain: nightly
         override: true
         components: rustfmt, clippy
     - name: Install deps
       run: |
         sudo apt-get update
         sudo apt-get install -y make gcc g++ libssl-dev pkg-config wget
-    - name: Fetch wasm plugin spec
-      run: |
-        wget https://raw.githubusercontent.com/cloudflavor/skyforge/main/spec/plugins-interface.json -O spec/plugins-interface.json
-    - name: Set env var
-      run: echo "SKYCRANE_SPEC_PATH=$(pwd)/spec" >> $GITHUB_ENV
+    - name: Run clippy
+      run: cargo clippy
     - name: Build skycrane
       run: cargo build
     - name: Run tests
