@@ -2,8 +2,8 @@ mod commands;
 mod wasm;
 
 pub use commands::{apply, destroy, init, reconcile};
-pub use wasm::engine::init_plugins;
-pub use wasm::plugins::{load_plugins, WasmPlugin};
+pub use wasm::engine::init_plugin;
+pub use wasm::plugins::{load_plugin, WasmPlugin};
 
 use std::env;
 use std::path::PathBuf;
@@ -39,7 +39,10 @@ pub enum Commands {
 pub struct Apply {}
 
 #[derive(StructOpt, Clone, Debug)]
-pub struct Init {}
+pub struct Init {
+    #[structopt(parse(from_os_str), help = "Path to initialize")]
+    pub path: PathBuf,
+}
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Reconcile {}

@@ -1,8 +1,8 @@
-use crate::Cli;
+use crate::{Cli, WasmPlugin};
 use anyhow::Result;
-use wasmtime::Instance;
 
-pub async fn init(_opts: &Cli, _instance: Instance) -> Result<()> {
+pub async fn init(opts: &Cli, _plugin: WasmPlugin) -> Result<()> {
+    println!("{:?}", opts);
     Ok(())
 }
 
