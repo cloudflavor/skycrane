@@ -8,6 +8,7 @@ pub fn init_plugin(plugin: &mut WasmPlugin) -> Result<()> {
     let engine = Engine::default();
     let mut linker = Linker::new(&engine);
     add_to_linker(&mut linker, |s| s).with_context(|| "Failed to add WASI to linker")?;
+    info!("Added WASI to linker");
     let wasi_ctx = WasiCtxBuilder::new().inherit_stdio().inherit_env()?.build();
     let mut store = Store::new(&engine, wasi_ctx);
 
@@ -16,7 +17,9 @@ pub fn init_plugin(plugin: &mut WasmPlugin) -> Result<()> {
     let instance = linker.instantiate(&mut store, &module)?;
     instance
         .get_func(&mut store, "plugin-api#deserialize-config")
-        .unwrap();
+        .ok_or(anyhow::anyhow!(
+            "Failed to find deserialize-config function"
+        ))?;
 
     info!(
         "Successfully validated: {} from: {}",

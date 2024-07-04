@@ -1,7 +1,8 @@
 mod commands;
+mod config;
 mod wasm;
 
-pub use commands::{apply, destroy, init, reconcile};
+pub use commands::init;
 pub use wasm::engine::init_plugin;
 pub use wasm::plugins::{load_plugin, WasmPlugin};
 
