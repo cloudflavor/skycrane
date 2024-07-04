@@ -1,19 +1,16 @@
-use crate::{Cli, WasmPlugin};
+use crate::config::loader::{extract_plugin, load, read_config};
+use crate::Init;
 use anyhow::Result;
+use std::path::Path;
+use tracing::info;
 
-pub async fn init(opts: &Cli, _plugin: WasmPlugin) -> Result<()> {
-    println!("{:?}", opts);
-    Ok(())
-}
+pub async fn init(opts: Init, config_path: impl AsRef<Path>) -> Result<()> {
+    info!("Initializing new repository at {:?}", opts.path);
 
-pub fn apply(_opts: &Cli) -> Result<()> {
-    Ok(())
-}
+    let base = format!("{}/base.star", opts.path.display());
+    let config = read_config(&base).await?;
+    let plugin = extract_plugin(config.as_str())?;
+    load(config_path, &plugin.name).await?;
 
-pub fn reconcile(_opts: &Cli) -> Result<()> {
-    Ok(())
-}
-
-pub fn destroy(_opts: &Cli) -> Result<()> {
     Ok(())
 }

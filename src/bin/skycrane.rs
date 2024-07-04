@@ -1,5 +1,5 @@
-use anyhow::{Context, Result};
-use skycrane::{apply, destroy, init, load_plugin, reconcile, Cli, Commands};
+use anyhow::Result;
+use skycrane::{init, Cli, Commands};
 use structopt::StructOpt;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
@@ -20,20 +20,11 @@ async fn main() -> Result<()> {
 
     debug!("loading with opts: {:#?}", &opts);
 
-    let plugin = load_plugin(opts.config_path.clone(), "hetzner") // TODO: Fix me, this should come from the starlark file.
-        .await
-        .with_context(|| {
-            format!(
-                "Failed to load plugin from {:?}",
-                opts.config_path.join("plugins")
-            )
-        })?;
-
     match opts.commands {
-        Commands::Init(_) => init(&opts, plugin).await?, // TODO: Fix me!
-        Commands::Apply(_) => apply(&opts)?,
-        Commands::Reconcile(_) => reconcile(&opts)?,
-        Commands::Destroy(_) => destroy(&opts)?,
+        Commands::Init(args) => init(args, &opts.config_path).await?,
+        Commands::Apply(_) => unimplemented!("Apply not implemented"),
+        Commands::Reconcile(_) => unimplemented!("Reconcile not implemented"),
+        Commands::Destroy(_) => unimplemented!("Destroy not implemented"),
     }
 
     Ok(())
