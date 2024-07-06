@@ -1,27 +1,25 @@
 use crate::wasm::plugins::load_plugin;
+use crate::WasmPlugin;
 use allocative::Allocative;
 use anyhow::{Context, Result};
 use starlark::environment::{GlobalsBuilder, Module};
 use starlark::eval::Evaluator;
-use starlark::starlark_module;
-use starlark::starlark_simple_value;
 use starlark::syntax::{AstModule, Dialect};
 use starlark::values::{NoSerialize, ProvidesStaticType};
 use starlark::values::{StarlarkValue, ValueLike};
+use starlark::{starlark_module, starlark_simple_value};
 use starlark_derive::starlark_value;
 use starlark_syntax::syntax::module::AstModuleFields;
 use std::fmt;
 use std::path::Path;
 use tokio::fs;
 
-pub async fn load(config_path: impl AsRef<Path>, module_name: &str) -> Result<()> {
+pub async fn load(config_path: impl AsRef<Path>, module_name: &str) -> Result<WasmPlugin> {
     let plugins_path = config_path.as_ref().join("plugins");
 
     load_plugin(config_path, module_name)
         .await
-        .with_context(|| format!("Failed to load plugin from {:?}", plugins_path))?;
-
-    Ok(())
+        .with_context(|| format!("Failed to load plugin from {:?}", plugins_path))
 }
 
 pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
@@ -29,12 +27,12 @@ pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
         .await
         .with_context(|| format!("Failed to read starlark file at {:?}", path.as_ref()))?;
 
-    return String::from_utf8(starlark).with_context(|| {
+    String::from_utf8(starlark).with_context(|| {
         format!(
             "Failed to parse starlark file at {:?} as UTF-8",
             path.as_ref()
         )
-    });
+    })
 }
 
 #[starlark_module]
@@ -72,6 +70,8 @@ pub fn extract_plugin(config: &str) -> Result<CloudModule> {
         .into_iter()
         .filter_map(|file_span| {
             let snippet = codemap.source_span(file_span.span);
+            // TODO: this should be a hash map of statements
+            // snippet.contains("module")
             if snippet.contains("module") {
                 Some(snippet)
             } else {
