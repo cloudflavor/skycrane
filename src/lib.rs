@@ -5,10 +5,15 @@ mod wasm;
 pub use commands::init;
 pub use wasm::engine::init_plugin;
 pub use wasm::plugins::{load_plugin, WasmPlugin};
+use wasmtime::component::bindgen;
 
 use std::env;
 use std::path::PathBuf;
 use structopt::StructOpt;
+
+bindgen!({
+    path: "../skyforge/spec/wit",
+});
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Cli {
