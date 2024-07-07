@@ -26,6 +26,10 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y make gcc g++ libssl-dev pkg-config wget
+    - name: Clone Skyforge repo and copy wit API
+      run: |
+        git clone https://github.com/cloudflavor/skyforge.git 
+        rm wit || true && ln -s skyforge/spec/wit
     - name: Run clippy
       run: cargo clippy
     - name: Build skycrane
