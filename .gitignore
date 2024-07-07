@@ -15,4 +15,4 @@ Cargo.lock
 
 *.wasm
 *.wat
-plugins-interface.json
+wit

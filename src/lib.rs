@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 bindgen!({
-    path: "../skyforge/spec/wit",
+    path: "wit",
 });
 
 #[derive(StructOpt, Clone, Debug)]
