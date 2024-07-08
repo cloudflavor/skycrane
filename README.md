@@ -1,5 +1,3 @@
-# skycrane
-
 <div align="center">
     <a href="https://docs.skycrane.io">
         <img src="https://img.shields.io/badge/web-docs-blue" alt="Static Badge"/>
@@ -16,6 +14,7 @@
 
 [Skycrane](https://skycrane.io) is an Infrastructure as Code (IaC) tool that uses WASI
 plugins to securely and efficiently manage cloud resources across multiple providers.  
+
 It allows users to define resources using
 [Starlark](https://github.com/bazelbuild/starlark), a Python-like configuration language.
 
