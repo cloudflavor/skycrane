@@ -2,7 +2,9 @@
     <a href="https://docs.skycrane.io">
         <img src="https://img.shields.io/badge/web-docs-blue" alt="Static Badge"/>
     </a>
+    <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/cloudflavor/skycrane/rust.yml">
 </div>
+
 <div align="center">
   <img src="assets/images/skycrane.svg" width="160" alt="skycrane">
 </div>
@@ -19,7 +21,7 @@ It allows users to define resources using
 [Starlark](https://github.com/bazelbuild/starlark), a Python-like configuration language.
 
 Resource specifications for each plugin are maintained in the
-[skyforge](https://github.com/cloudflavor/skyforge) repository, enabling a standardized
+[Skyforge](https://github.com/cloudflavor/skyforge) repository, enabling a standardized
 approach to resource definition across different cloud platforms.  
 
 Drawing inspiration from kustomize, Skycrane provides a streamlined way to manage
