@@ -18,8 +18,7 @@ use tracing::info;
 pub async fn init(opts: Init, config_path: impl AsRef<Path>) -> Result<()> {
     info!("Initializing new repository at {:?}", opts.path);
 
-    let base = format!("{}/base.star", opts.path.display());
-    let config = read_config(&base).await?;
+    let config = read_config(&opts.path).await?;
     let cloud_mod = extract_plugin(config.as_str())?;
     let _ = load(config_path, &cloud_mod.name).await?;
 
