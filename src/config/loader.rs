@@ -23,11 +23,23 @@ pub async fn load(config_path: impl AsRef<Path>, module_name: &str) -> Result<Wa
 }
 
 pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
-    let starlark = fs::read(&path)
-        .await
-        .with_context(|| format!("Failed to read starlark file at {:?}", path.as_ref()))?;
+    let mut entries = fs::read_dir(&path).await?;
+    let mut star_files = Vec::new();
 
-    String::from_utf8(starlark).with_context(|| {
+    while let Some(entry) = entries.next_entry().await? {
+        if entry.file_type().await?.is_file()
+            && entry
+                .file_name()
+                .to_str()
+                .map(|f| f.ends_with(".star"))
+                .unwrap_or(false)
+        {
+            let mut data = fs::read(entry.path()).await?;
+            star_files.append(&mut data);
+        }
+    }
+
+    String::from_utf8(star_files).with_context(|| {
         format!(
             "Failed to parse starlark file at {:?} as UTF-8",
             path.as_ref()
@@ -63,7 +75,7 @@ pub fn extract_plugin(config: &str) -> Result<CloudModule> {
     let module = Module::new();
     let mut eval = Evaluator::new(&module);
 
-    let raw_ast = AstModule::parse("base.star", config.to_string(), &Dialect::Standard).unwrap();
+    let raw_ast = AstModule::parse("module.star", config.to_string(), &Dialect::Standard).unwrap();
     let codemap = raw_ast.codemap();
     let filtered_script = raw_ast
         .stmt_locations()
@@ -81,7 +93,8 @@ pub fn extract_plugin(config: &str) -> Result<CloudModule> {
         .collect::<Vec<_>>()
         .join("\n");
 
-    let filtered_ast = AstModule::parse("base.star", filtered_script, &Dialect::Standard).unwrap();
+    let filtered_ast =
+        AstModule::parse("module.star", filtered_script, &Dialect::Standard).unwrap();
 
     let res = eval.eval_module(filtered_ast, &globals).unwrap();
     let cloud_mod = res
