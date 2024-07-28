@@ -36,6 +36,7 @@ pub struct Cli {
 #[derive(StructOpt, Clone, Debug)]
 pub enum Commands {
     Init(Init),
+    Plan(Plan),
     Apply(Apply),
     Reconcile(Reconcile),
     Destroy(Destroy),
@@ -44,10 +45,18 @@ pub enum Commands {
 #[derive(StructOpt, Clone, Debug)]
 pub struct Apply {}
 
+/// Initialize a new repository at the given path This will download the specified plugin
+/// in the skycrane plugins config directory.
 #[derive(StructOpt, Clone, Debug)]
 pub struct Init {
     #[structopt(parse(from_os_str), help = "Path to initialize")]
     pub path: PathBuf,
+}
+
+#[derive(StructOpt, Clone, Debug)]
+pub struct Plan {
+    #[structopt(parse(from_os_str), help = "Path to plan")]
+    pub output: PathBuf,
 }
 
 #[derive(StructOpt, Clone, Debug)]

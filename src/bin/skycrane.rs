@@ -22,6 +22,7 @@ async fn main() -> Result<()> {
 
     match opts.commands {
         Commands::Init(args) => init(args, &opts.config_path).await?,
+        Commands::Plan(_) => unimplemented!("Plan not implemented"),
         Commands::Apply(_) => unimplemented!("Apply not implemented"),
         Commands::Reconcile(_) => unimplemented!("Reconcile not implemented"),
         Commands::Destroy(_) => unimplemented!("Destroy not implemented"),

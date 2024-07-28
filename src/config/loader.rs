@@ -47,29 +47,6 @@ pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
     })
 }
 
-#[starlark_module]
-fn starlark_module(builder: &mut GlobalsBuilder) {
-    fn module(name: String, version: String) -> starlark::Result<CloudModule> {
-        Ok(CloudModule { name, version })
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, ProvidesStaticType, NoSerialize, Allocative, Clone)]
-pub struct CloudModule {
-    pub name: String,
-    pub version: String,
-}
-starlark_simple_value!(CloudModule);
-
-impl fmt::Display for CloudModule {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "name: {}, version: {}", self.name, self.version)
-    }
-}
-
-#[starlark_value(type = "CloudModule")]
-impl<'v> StarlarkValue<'v> for CloudModule {}
-
 pub fn extract_plugin(config: &str) -> Result<CloudModule> {
     let globals = GlobalsBuilder::new().with(starlark_module).build();
     let module = Module::new();
@@ -103,3 +80,26 @@ pub fn extract_plugin(config: &str) -> Result<CloudModule> {
 
     Ok(cloud_mod.clone())
 }
+
+#[starlark_module]
+fn starlark_module(builder: &mut GlobalsBuilder) {
+    fn module(name: String, version: String) -> starlark::Result<CloudModule> {
+        Ok(CloudModule { name, version })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, ProvidesStaticType, NoSerialize, Allocative, Clone)]
+pub struct CloudModule {
+    pub name: String,
+    pub version: String,
+}
+starlark_simple_value!(CloudModule);
+
+impl fmt::Display for CloudModule {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "name: {}, version: {}", self.name, self.version)
+    }
+}
+
+#[starlark_value(type = "CloudModule")]
+impl<'v> StarlarkValue<'v> for CloudModule {}

@@ -38,3 +38,14 @@ Skycrane is currently in development and is not yet ready for production use!
 $ cargo install skycrane
 ...
 ```
+
+## Init
+
+Initialize a new repository with a plugin specification.
+It will also validate that the plugin is loaded successfully.
+
+```shell
+$ skycrane init ~/projects/rust/skyforge/crates/plugins/hetzner/spec
+2024-07-28T19:48:35.649086Z  INFO skycrane::commands: Initializing new repository at "/path/to/skyforge/crates/plugins/hetzner/spec"
+2024-07-28T19:48:35.837392Z  INFO skycrane::wasm::engine: Plugin hetzner.wasm loaded successfully!
+```
