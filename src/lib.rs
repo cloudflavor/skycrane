@@ -2,7 +2,7 @@ mod commands;
 mod config;
 mod wasm;
 
-pub use commands::init;
+pub use commands::{init, plan};
 pub use wasm::engine::init_plugin;
 pub use wasm::plugins::{load_plugin, WasmPlugin};
 use wasmtime::component::bindgen;
@@ -11,9 +11,7 @@ use std::env;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
-bindgen!({
-    path: "wit",
-});
+bindgen!({path: "wit", world: "skyforge-api"});
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Cli {
