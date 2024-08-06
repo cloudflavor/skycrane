@@ -92,6 +92,7 @@ fn starlark_module(builder: &mut GlobalsBuilder) {
 pub struct CloudModule {
     pub name: String,
     pub version: String,
+    pub capabilities: Capabilities,
 }
 starlark_simple_value!(CloudModule);
 

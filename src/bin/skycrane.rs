@@ -1,5 +1,5 @@
 use anyhow::Result;
-use skycrane::{init, Cli, Commands};
+use skycrane::{init, plan, Cli, Commands};
 use structopt::StructOpt;
 use tracing::debug;
 use tracing_subscriber::EnvFilter;
@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     match opts.commands {
         Commands::Init(args) => init(args, &opts.config_path).await?,
-        Commands::Plan(_) => unimplemented!("Plan not implemented"),
+        Commands::Plan(args) => plan(args, &opts.config_path).await?,
         Commands::Apply(_) => unimplemented!("Apply not implemented"),
         Commands::Reconcile(_) => unimplemented!("Reconcile not implemented"),
         Commands::Destroy(_) => unimplemented!("Destroy not implemented"),

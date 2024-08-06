@@ -1,5 +1,5 @@
 use crate::config::loader::{extract_plugin, load, read_config};
-use crate::Init;
+use crate::{Init, Plan};
 use anyhow::Result;
 use std::path::Path;
 use tracing::info;
@@ -20,7 +20,18 @@ pub async fn init(opts: Init, config_path: impl AsRef<Path>) -> Result<()> {
 
     let config = read_config(&opts.path).await?;
     let cloud_mod = extract_plugin(config.as_str())?;
-    let _ = load(config_path, &cloud_mod.name).await?;
+    let plugin = load(config_path, &cloud_mod.name).await?;
+
+    Ok(())
+}
+
+pub async fn plan(opts: Plan, config_path: impl AsRef<Path>) -> Result<()> {
+    info!("Planning infrastructure at {:?}", opts.output);
+
+    let config = read_config(&opts.path).await?;
+    let cloud_mod = extract_plugin(config.as_str())?;
+    let plugin = load(config_path, &cloud_mod.name).await?;
+    let plugin = plugin.instance.unwrap();
 
     Ok(())
 }
