@@ -1,13 +1,20 @@
 <div align="center">
+    <a href="https://skycrane.io">https://skycrane.io</a>
+</div>
+<br>
+
+<div align="center">
     <a href="https://docs.skycrane.io">
         <img src="https://img.shields.io/badge/web-docs-blue" alt="Static Badge"/>
     </a>
     <img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/cloudflavor/skycrane/rust.yml">
 </div>
+<br>
 
 <div align="center">
   <img src="assets/images/skycrane.svg" width="160" alt="skycrane">
 </div>
+
 <div align="center">
   <strong>Skycrane automates infrastructure</strong>
 </div>
