@@ -20,7 +20,7 @@ pub async fn init(opts: Init, config_path: impl AsRef<Path>) -> Result<()> {
 
     let config = read_config(&opts.path).await?;
     let cloud_mod = extract_plugin(config.as_str())?;
-    let plugin = load(config_path, &cloud_mod.name).await?;
+    let _plugin = load(config_path, &cloud_mod.name).await?;
 
     Ok(())
 }
@@ -31,7 +31,7 @@ pub async fn plan(opts: Plan, config_path: impl AsRef<Path>) -> Result<()> {
     let config = read_config(&opts.path).await?;
     let cloud_mod = extract_plugin(config.as_str())?;
     let plugin = load(config_path, &cloud_mod.name).await?;
-    let plugin = plugin.instance.unwrap();
+    let _plugin = plugin.instance.unwrap();
 
     Ok(())
 }

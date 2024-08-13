@@ -45,6 +45,5 @@ async fn read_plugins(modules_path: impl AsRef<Path>, plugin_name: &str) -> Resu
             error!("Invalid file name for path: {:?}", path);
         }
     }
-
     Err(anyhow::anyhow!("No plugin {plugin_name} found!"))
 }

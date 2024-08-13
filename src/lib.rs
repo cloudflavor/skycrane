@@ -47,12 +47,14 @@ pub struct Apply {}
 /// in the skycrane plugins config directory.
 #[derive(StructOpt, Clone, Debug)]
 pub struct Init {
-    #[structopt(parse(from_os_str), help = "Path to initialize")]
+    #[structopt(parse(from_os_str), help = "Path to config")]
     pub path: PathBuf,
 }
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Plan {
+    #[structopt(parse(from_os_str), help = "Path to config")]
+    pub path: PathBuf,
     #[structopt(parse(from_os_str), help = "Path to plan")]
     pub output: PathBuf,
 }
