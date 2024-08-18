@@ -7,7 +7,18 @@ description = "Skycrane automates infrastructure"
 license = "Apache-2.0"
 repository = "https://github.com/cloudflavor/skycrane"
 readme = "README.md"
-keywords = ["automation", "infrastructure", "wasm", "wasmtime", "webassembly"]
+keywords = [
+    "automation",
+    "infrastructure",
+    "wasm",
+    "wasmtime",
+    "webassembly",
+    "wasi",
+    "iac",
+    "starlark",
+    "cloud",
+    "kubernetes",
+]
 categories = ["command-line-utilities", "wasm"]
 
 [[bin]]
@@ -28,6 +39,5 @@ structopt = "0.3.26"
 tokio = { version = "1.35.1", features = ["rt-multi-thread", "macros", "fs"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-wasi-common = "22.0.0"
-wasmtime = "22.0.0"
-wasmtime-wasi = "22.0.0"
+wasmtime = "23.0"
+wasmtime-wasi = "23.0"
