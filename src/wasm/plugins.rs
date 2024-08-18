@@ -1,4 +1,5 @@
 use crate::init_plugin;
+use crate::starlark::std::PluginCapabilities;
 use crate::SkyforgeApi;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
@@ -9,6 +10,7 @@ pub struct WasmPlugin {
     pub name: String,
     pub path: PathBuf,
     pub instance: Option<SkyforgeApi>,
+    pub capabilities: Vec<PluginCapabilities>,
 }
 
 pub async fn load_plugin(config_path: impl AsRef<Path>, name: &str) -> Result<WasmPlugin> {
@@ -16,7 +18,7 @@ pub async fn load_plugin(config_path: impl AsRef<Path>, name: &str) -> Result<Wa
     debug!("Loading plugins from {:?}", plugins_path);
 
     if let Ok(mut plugin) = read_plugins(plugins_path.clone(), name).await {
-        init_plugin(&mut plugin)
+        init_plugin(&mut plugin, cloud_module)
             .with_context(|| format!("Failed to init plugin: {}", plugin.name))?;
 
         Ok(plugin)
@@ -40,11 +42,11 @@ async fn read_plugins(modules_path: impl AsRef<Path>, plugin_name: &str) -> Resu
                 name: file_name.to_string(),
                 path,
                 instance: None,
+                capabilities: Vec::new(),
             });
         } else {
             error!("Invalid file name for path: {:?}", path);
         }
     }
-
     Err(anyhow::anyhow!("No plugin {plugin_name} found!"))
 }
