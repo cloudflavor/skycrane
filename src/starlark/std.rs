@@ -23,7 +23,7 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
     // would be INHERIT_ARGS().
     const INHERIT_ARGS: &str = INHERIT_ARGS;
     const INHERIT_ENV: &str = INHERIT_ENV;
-    const INHErit_STDIN: &str = INHERIT_STDIN;
+    const INHERIT_STDIN: &str = INHERIT_STDIN;
     const INHERIT_STDIO: &str = INHERIT_STDIO;
     const INHERIT_STDOUT: &str = INHERIT_STDOUT;
     const INHERIT_NETWORK: &str = INHERIT_NETWORK;
