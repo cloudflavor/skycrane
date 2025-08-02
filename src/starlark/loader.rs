@@ -1,23 +1,19 @@
+use super::std::{skycrane_std, CloudModule};
 use crate::wasm::plugins::load_plugin;
 use crate::WasmPlugin;
-use allocative::Allocative;
 use anyhow::{Context, Result};
 use starlark::environment::{GlobalsBuilder, Module};
 use starlark::eval::Evaluator;
 use starlark::syntax::{AstModule, Dialect};
-use starlark::values::{NoSerialize, ProvidesStaticType};
-use starlark::values::{StarlarkValue, ValueLike};
-use starlark::{starlark_module, starlark_simple_value};
-use starlark_derive::starlark_value;
+use starlark::values::{Value, ValueLike};
 use starlark_syntax::syntax::module::AstModuleFields;
-use std::fmt;
 use std::path::Path;
 use tokio::fs;
 
-pub async fn load(config_path: impl AsRef<Path>, module_name: &str) -> Result<WasmPlugin> {
+pub async fn load(config_path: impl AsRef<Path>, cloud_module: CloudModule) -> Result<WasmPlugin> {
     let plugins_path = config_path.as_ref().join("plugins");
 
-    load_plugin(config_path, module_name)
+    load_plugin(config_path, &cloud_module)
         .await
         .with_context(|| format!("Failed to load plugin from {:?}", plugins_path))
 }
@@ -32,7 +28,7 @@ pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
                 .file_name()
                 .to_str()
                 .map(|f| f.ends_with(".star"))
-                .unwrap_or(false)
+                .unwrap_or_default()
         {
             let mut data = fs::read(entry.path()).await?;
             star_files.append(&mut data);
@@ -48,8 +44,11 @@ pub async fn read_config(path: impl AsRef<Path>) -> Result<String> {
 }
 
 pub fn extract_plugin(config: &str) -> Result<CloudModule> {
-    let globals = GlobalsBuilder::new().with(starlark_module).build();
+    let globals = GlobalsBuilder::new().with(skycrane_std).build();
     let module = Module::new();
+    module.set("true", Value::new_bool(true));
+    module.set("false", Value::new_bool(false));
+
     let mut eval = Evaluator::new(&module);
 
     let raw_ast = AstModule::parse("module.star", config.to_string(), &Dialect::Standard).unwrap();
@@ -76,30 +75,7 @@ pub fn extract_plugin(config: &str) -> Result<CloudModule> {
     let res = eval.eval_module(filtered_ast, &globals).unwrap();
     let cloud_mod = res
         .downcast_ref::<CloudModule>()
-        .ok_or(anyhow::anyhow!("Failed to downcast CloudModule"))?;
+        .ok_or(anyhow::anyhow!("failed to interpret CloudModule"))?;
 
     Ok(cloud_mod.clone())
 }
-
-#[starlark_module]
-fn starlark_module(builder: &mut GlobalsBuilder) {
-    fn module(name: String, version: String) -> starlark::Result<CloudModule> {
-        Ok(CloudModule { name, version })
-    }
-}
-
-#[derive(Debug, PartialEq, Eq, ProvidesStaticType, NoSerialize, Allocative, Clone)]
-pub struct CloudModule {
-    pub name: String,
-    pub version: String,
-}
-starlark_simple_value!(CloudModule);
-
-impl fmt::Display for CloudModule {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "name: {}, version: {}", self.name, self.version)
-    }
-}
-
-#[starlark_value(type = "CloudModule")]
-impl<'v> StarlarkValue<'v> for CloudModule {}

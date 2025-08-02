@@ -1,19 +1,18 @@
+#![allow(clippy::type_complexity)]
+
 mod commands;
-mod config;
+mod starlark;
 mod wasm;
 
-pub use commands::init;
+pub use commands::{init, plan};
+use std::env;
+use std::path::PathBuf;
+use structopt::StructOpt;
 pub use wasm::engine::init_plugin;
 pub use wasm::plugins::{load_plugin, WasmPlugin};
 use wasmtime::component::bindgen;
 
-use std::env;
-use std::path::PathBuf;
-use structopt::StructOpt;
-
-bindgen!({
-    path: "wit",
-});
+bindgen!({path: "wit", world: "skyforge-api"});
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Cli {
@@ -49,12 +48,14 @@ pub struct Apply {}
 /// in the skycrane plugins config directory.
 #[derive(StructOpt, Clone, Debug)]
 pub struct Init {
-    #[structopt(parse(from_os_str), help = "Path to initialize")]
+    #[structopt(parse(from_os_str), help = "Path to config")]
     pub path: PathBuf,
 }
 
 #[derive(StructOpt, Clone, Debug)]
 pub struct Plan {
+    #[structopt(parse(from_os_str), help = "Path to config")]
+    pub path: PathBuf,
     #[structopt(parse(from_os_str), help = "Path to plan")]
     pub output: PathBuf,
 }
