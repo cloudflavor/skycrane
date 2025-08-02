@@ -7,18 +7,22 @@ use anyhow::{Context, Result};
 use tracing::info;
 use wasmtime::component::{Component, Linker};
 use wasmtime::{Engine, Store};
-use wasmtime_wasi::{DirPerms, FilePerms, ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::p2::{IoView, WasiCtx, WasiCtxBuilder, WasiView};
+use wasmtime_wasi::ResourceTable;
 
 pub struct MyState {
     ctx: WasiCtx,
     table: ResourceTable,
 }
-impl WasiView for MyState {
-    fn ctx(&mut self) -> &mut wasmtime_wasi::WasiCtx {
-        &mut self.ctx
-    }
+impl IoView for MyState {
     fn table(&mut self) -> &mut ResourceTable {
         &mut self.table
+    }
+}
+
+impl WasiView for MyState {
+    fn ctx(&mut self) -> &mut WasiCtx {
+        &mut self.ctx
     }
 }
 
@@ -34,7 +38,7 @@ pub fn init_plugin(plugin: &mut WasmPlugin, cloud_module: &CloudModule) -> Resul
 
     let component = Component::from_file(&engine, &plugin.path)?;
     let mut linker = Linker::new(&engine);
-    wasmtime_wasi::add_to_linker_sync(&mut linker)?;
+    wasmtime_wasi::p2::add_to_linker_sync(&mut linker)?;
     let skyforge = SkyforgeApi::instantiate(&mut store, &component, &linker)?;
 
     plugin.instance = Some(skyforge);

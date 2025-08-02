@@ -28,7 +28,7 @@ It allows users to define resources using
 [Starlark](https://github.com/bazelbuild/starlark), a Python-like configuration language.
 
 Resource specifications for each plugin are maintained in the
-[Skyforge](https://github.com/cloudflavor/skyforge) repository, enabling a standardized
+Skyforge repository, enabling a standardized
 approach to resource definition across different cloud platforms.  
 
 Drawing inspiration from kustomize, Skycrane provides a streamlined way to manage
@@ -56,3 +56,28 @@ $ skycrane init ~/projects/rust/skyforge/crates/plugins/hetzner/spec
 2024-07-28T19:48:35.649086Z  INFO skycrane::commands: Initializing new repository at "/path/to/skyforge/crates/plugins/hetzner/spec"
 2024-07-28T19:48:35.837392Z  INFO skycrane::wasm::engine: Plugin hetzner.wasm loaded successfully!
 ```
+
+# Skyforge
+
+A registry of WASI plugins for infrastructure provisioning
+
+## Building
+
+All plugins are built using the wasm component of the Rust toolchain. To build the plugins, run the following command:
+
+e.g. for the Hetzner plugin:
+
+```sh
+$ cargo install cargo-component --locked
+...
+$ cargo component build && cp ../../../target/wasm32-wasi/debug/hetzner.wasm ~/.config/skycrane/plugins/
+...
+```
+
+This will build the plugin and copy the resulting wasm file to the
+`~/.config/skycrane/plugins/` directory. The manual copy is necessary because we don't
+have a registry in place at the moment. Once the registry is in place, skycrane will
+download the plugin automatically.
+
+
+cargo component build --target wasm32-wasip1 && cp ../../../target/wasm32-wasip1/debug/hetzner.wasm ~/.config/skycrane/plugins

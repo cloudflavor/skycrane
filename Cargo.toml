@@ -1,43 +1,8 @@
-[package]
-name = "skycrane"
-version = "0.1.0"
-edition = "2021"
-authors = ["Victor Palade <victor@cloudflavor.io>"]
-description = "Skycrane automates infrastructure"
-license = "Apache-2.0"
-repository = "https://github.com/cloudflavor/skycrane"
-readme = "README.md"
-keywords = [
-  "automation",
-  "infrastructure",
-  "wasm",
-  "wasmtime",
-  "webassembly",
-  "wasi",
-  "iac",
-  "starlark",
-  "cloud",
-  "kubernetes",
+[workspace]
+resolver = "2"
+members = [
+  "crates/skyforge/sdk",
+  "crates/skyforge/macros",
+  "crates/skycrane",
+  "crates/skyforge/plugins/hetzner",
 ]
-categories = ["command-line-utilities", "wasm"]
-
-[[bin]]
-name = "skycrane"
-path = "src/bin/skycrane.rs"
-
-[badges]
-maintenance = { status = "actively-developed" }
-
-[dependencies]
-allocative = "0.3.3"
-anyhow = "1.0.79"
-rust-embed = { version = "8.2.0", features = ["interpolate-folder-path"] }
-starlark = "0.13.0"
-starlark_derive = "0.13.0"
-starlark_syntax = "0.13.0"
-structopt = "0.3.26"
-tokio = { version = "1.38.2", features = ["rt-multi-thread", "macros", "fs"] }
-tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-wasmtime = "35.0"
-wasmtime-wasi = "35.0"

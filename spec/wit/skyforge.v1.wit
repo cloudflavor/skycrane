@@ -1,0 +1,20 @@
+package cloudflavor:skyforge@0.1.0;
+
+interface plugin-api {
+    record config {
+        name: string
+    }
+
+    enum error {
+        invalid-format,
+        missing-field,
+        other,
+    }
+
+    verify-config: func(config: config) -> result<_, error>;
+    get-version: func() -> string;
+}
+
+world skyforge-api {
+    export plugin-api;
+}

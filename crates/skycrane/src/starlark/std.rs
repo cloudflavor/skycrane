@@ -7,6 +7,7 @@ use starlark::values::{
 use starlark::{starlark_module, starlark_simple_value};
 use starlark_derive::starlark_value;
 use std::fmt;
+use tracing::info;
 
 pub const INHERIT_ARGS: &str = "InheritArgs";
 pub const INHERIT_ENV: &str = "InheritEnv";
@@ -79,6 +80,7 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
 }
 
 fn extract_file_perms(value: Option<Value>) -> anyhow::Result<FilePerms> {
+    info!("{:#?}", value);
     match value {
         Some(v) => v
             .downcast_ref::<FilePerms>()
