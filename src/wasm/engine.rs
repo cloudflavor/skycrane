@@ -22,7 +22,7 @@ impl WasiView for MyState {
     }
 }
 
-pub fn init_plugin(plugin: &mut WasmPlugin, cloud_module: CloudModule) -> Result<()> {
+pub fn init_plugin(plugin: &mut WasmPlugin, cloud_module: &CloudModule) -> Result<()> {
     let engine = Engine::default();
 
     let mut store = create_store(&engine, cloud_module).with_context(|| {
@@ -45,9 +45,9 @@ pub fn init_plugin(plugin: &mut WasmPlugin, cloud_module: CloudModule) -> Result
 
 fn add_builder_capabilities(
     mut builder: WasiCtxBuilder,
-    capabilities: Vec<String>,
+    capabilities: &[String],
 ) -> Result<WasiCtxBuilder> {
-    for cap in capabilities.into_iter() {
+    for cap in capabilities.iter() {
         match cap.as_str() {
             INHERIT_ARGS => {
                 builder.inherit_args();
@@ -75,9 +75,9 @@ fn add_builder_capabilities(
 
 fn add_builder_mounts(
     mut builder: WasiCtxBuilder,
-    mounts: Vec<PluginMount>,
+    mounts: &[PluginMount],
 ) -> Result<WasiCtxBuilder> {
-    for mount in mounts.into_iter() {
+    for mount in mounts.iter() {
         // builder.preopened_dir(
         //     mount.host_path,
         //     mount.guest_path,
@@ -88,13 +88,13 @@ fn add_builder_mounts(
     Ok(builder)
 }
 
-pub fn create_store(engine: &Engine, cloud_module: CloudModule) -> Result<Store<MyState>> {
+pub fn create_store(engine: &Engine, cloud_module: &CloudModule) -> Result<Store<MyState>> {
     let mut builder = WasiCtxBuilder::new();
-    builder = add_builder_capabilities(builder, cloud_module.capabilities)?;
-    builder = add_builder_mounts(builder, cloud_module.mounts)?;
+    builder = add_builder_capabilities(builder, &cloud_module.capabilities)?;
+    builder = add_builder_mounts(builder, &cloud_module.mounts)?;
 
     Ok(Store::new(
-        &engine,
+        engine,
         MyState {
             ctx: builder.build(),
             table: ResourceTable::default(),

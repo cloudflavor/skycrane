@@ -1,8 +1,9 @@
 use allocative::Allocative;
 use anyhow::Context;
 use starlark::environment::GlobalsBuilder;
-use starlark::values::AllocValue;
-use starlark::values::{Heap, NoSerialize, ProvidesStaticType, StarlarkValue, Value, ValueLike};
+use starlark::values::{
+    AllocValue, Heap, NoSerialize, ProvidesStaticType, StarlarkValue, Value, ValueLike,
+};
 use starlark::{starlark_module, starlark_simple_value};
 use starlark_derive::starlark_value;
 use std::fmt;
@@ -17,10 +18,11 @@ pub const ALLOW_IP_NAME_LOOKUP: &str = "AllowIpNameLookup";
 
 #[starlark_module]
 pub fn skycrane_std(builder: &mut GlobalsBuilder) {
-    // These need to be defined in the module so that they are part ot the starlark std
-    // an Enum has been considered, but it's less feasible since they need to be allocated
+    // These need to be defined in the module so that they are part ot the starlark std.
+    // An Enum has been considered, but it's less feasible since they need to be allocated
     // to the starlark heap via functions and instead of INHERIT_ARGS in starlark, it
-    // would be INHERIT_ARGS().
+    // would be INHERIT_ARGS(), which is not aesthetically pleasing for something that's
+    // supposed to be a flag.
     const INHERIT_ARGS: &str = INHERIT_ARGS;
     const INHERIT_ENV: &str = INHERIT_ENV;
     const INHERIT_STDIN: &str = INHERIT_STDIN;
@@ -35,29 +37,8 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
         file_perms: Option<Value<'v>>,
         dir_perms: Option<Value<'v>>,
     ) -> anyhow::Result<PluginMount> {
-        let file_perms = if let Some(file_perms) = file_perms {
-            file_perms
-                .downcast_ref::<FilePerms>()
-                .with_context(|| "failed to interpret file permissions")?
-                .to_owned()
-        } else {
-            FilePerms {
-                read: false,
-                write: false,
-            }
-        };
-
-        let dir_perms = if let Some(dir_perms) = dir_perms {
-            dir_perms
-                .downcast_ref::<DirPerms>()
-                .with_context(|| "failed to interpret directory permissions")?
-                .to_owned()
-        } else {
-            DirPerms {
-                read: false,
-                mutate: false,
-            }
-        };
+        let file_perms = extract_file_perms(file_perms)?;
+        let dir_perms = extract_dir_perms(dir_perms)?;
 
         Ok(PluginMount {
             host_path,
@@ -72,31 +53,11 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
         mounts: Value<'v>,
         heap: &'v Heap,
     ) -> anyhow::Result<PluginCapabilities> {
-        let mut inherited_caps = Vec::new();
-        let mut mount_results = Vec::new();
-
-        for inherit in inherits.iterate(heap).unwrap() {
-            match inherit.to_str().as_str() {
-                INHERIT_ARGS => inherited_caps.push(INHERIT_ARGS),
-                INHERIT_ENV => inherited_caps.push(INHERIT_ENV),
-                INHERIT_STDIN => inherited_caps.push(INHERIT_STDIN),
-                INHERIT_STDIO => inherited_caps.push(INHERIT_STDIO),
-                INHERIT_STDOUT => inherited_caps.push(INHERIT_STDOUT),
-                INHERIT_NETWORK => inherited_caps.push(INHERIT_NETWORK),
-                ALLOW_IP_NAME_LOOKUP => inherited_caps.push(ALLOW_IP_NAME_LOOKUP),
-                _ => anyhow::bail!("Invalid capability"),
-            }
-        }
-
-        for mount in mounts.iterate(heap).unwrap() {
-            let a = mount
-                .downcast_ref::<PluginMount>()
-                .with_context(|| "failed to interpret mount declaration")?;
-            mount_results.push(a.to_owned());
-        }
+        let _inherited_mounts = parse_mounts(mounts, heap)?;
+        let inherited_caps = parse_inherits(inherits, heap)?;
 
         Ok(PluginCapabilities {
-            inherits: Vec::new(),
+            inherits: inherited_caps,
             mounts: Vec::new(),
         })
     }
@@ -108,18 +69,6 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
         mounts: Option<Value<'v>>,
         heap: &'v Heap,
     ) -> anyhow::Result<CloudModule> {
-        if let Some(mounts) = mounts {
-            for mount in mounts.iterate(heap).unwrap() {
-                let a = mount
-                    .downcast_ref::<PluginMount>()
-                    .with_context(|| "failed to interpret mount declaration")?;
-            }
-        }
-
-        if let Some(caps) = capabilities {
-            for item in caps.iterate(heap).unwrap() {}
-        }
-
         Ok(CloudModule {
             name,
             version,
@@ -129,7 +78,7 @@ pub fn skycrane_std(builder: &mut GlobalsBuilder) {
     }
 }
 
-fn extract_file_perms<'v>(value: Option<Value<'v>>) -> anyhow::Result<FilePerms> {
+fn extract_file_perms(value: Option<Value>) -> anyhow::Result<FilePerms> {
     match value {
         Some(v) => v
             .downcast_ref::<FilePerms>()
@@ -142,7 +91,7 @@ fn extract_file_perms<'v>(value: Option<Value<'v>>) -> anyhow::Result<FilePerms>
     }
 }
 
-fn extract_dir_perms<'v>(value: Option<Value<'v>>) -> anyhow::Result<DirPerms> {
+fn extract_dir_perms(value: Option<Value>) -> anyhow::Result<DirPerms> {
     match value {
         Some(v) => v
             .downcast_ref::<DirPerms>()
@@ -178,6 +127,17 @@ fn parse_inherits<'v>(inherits: Value<'v>, heap: &'v Heap) -> anyhow::Result<Vec
     }
 }
 
+fn parse_mounts<'v>(mounts: Value<'v>, heap: &'v Heap) -> anyhow::Result<Vec<PluginMount>> {
+    let mut mount_results = Vec::new();
+    for mount in mounts.iterate(heap).unwrap() {
+        let converted_mount = mount
+            .downcast_ref::<PluginMount>()
+            .with_context(|| "failed to interpret mount declaration")?;
+        mount_results.push(converted_mount.to_owned());
+    }
+    Ok(mount_results)
+}
+
 #[derive(Debug, PartialEq, Eq, ProvidesStaticType, NoSerialize, Allocative, Clone)]
 pub struct PluginCapabilities {
     inherits: Vec<String>,
@@ -193,10 +153,10 @@ impl<'v> AllocValue<'v> for PluginCapabilities {
 impl fmt::Display for PluginCapabilities {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for cap in self.inherits.iter() {
-            write!(f, "inherits: {cap}");
+            write!(f, "inherits: {cap}")?;
         }
         for mount in self.mounts.iter() {
-            write!(f, "mounts: {mount}");
+            write!(f, "mounts: {mount}")?;
         }
         Ok(())
     }
@@ -222,6 +182,12 @@ pub struct FilePerms {
 impl fmt::Display for FilePerms {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "read: {}, write: {}", self.read, self.write)
+    }
+}
+
+impl<'v> AllocValue<'v> for FilePerms {
+    fn alloc_value(self, heap: &'v Heap) -> Value<'v> {
+        heap.alloc(self)
     }
 }
 
@@ -283,6 +249,8 @@ impl fmt::Display for CloudModule {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
     fn test_iterate_over_inherits() {
         let heap = Heap::new();
 
@@ -291,6 +259,7 @@ mod test {
             heap.alloc(INHERIT_STDIN),
             heap.alloc(INHERIT_STDIO),
             heap.alloc(INHERIT_STDOUT),
+            heap.alloc(INHERIT_ENV),
             heap.alloc(INHERIT_NETWORK),
             heap.alloc(ALLOW_IP_NAME_LOOKUP),
         ];
@@ -298,5 +267,26 @@ mod test {
 
         let result = parse_inherits(inherits, &heap).unwrap();
         assert_eq!(result.len(), 7);
+    }
+
+    #[test]
+    fn test_invalid_inherit() {
+        let heap = Heap::new();
+        let inherits_list = vec![heap.alloc("invalid")];
+        let inherits = heap.alloc(inherits_list);
+        let result = parse_inherits(inherits, &heap);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_extract_file_perms() {
+        let heap = Heap::new();
+        let perms = heap.alloc(FilePerms {
+            read: true,
+            write: true,
+        });
+        let result = extract_file_perms(Some(perms)).unwrap();
+        assert!(result.read);
+        assert!(result.write);
     }
 }

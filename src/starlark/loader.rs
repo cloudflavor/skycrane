@@ -13,7 +13,7 @@ use tokio::fs;
 pub async fn load(config_path: impl AsRef<Path>, cloud_module: CloudModule) -> Result<WasmPlugin> {
     let plugins_path = config_path.as_ref().join("plugins");
 
-    load_plugin(config_path, &cloud_module.name)
+    load_plugin(config_path, &cloud_module)
         .await
         .with_context(|| format!("Failed to load plugin from {:?}", plugins_path))
 }
