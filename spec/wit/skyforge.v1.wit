@@ -1,0 +1,303 @@
+package cloudflavor:skyforge@0.1.0;
+
+interface types {
+    // Core types
+    type bytes = list<u8>;
+    
+    record key-value {
+        key: string,
+        value: string,
+    }
+    
+    // Error handling
+    enum error-category {
+        retryable,
+        permanent,
+        auth-failed,
+        rate-limited,
+        validation,
+        not-found,
+        conflict,
+    }
+    
+    record error {
+        category: error-category,
+        code: string,
+        message: string,
+        details: list<key-value>,
+        retry-after: option<u32>,
+    }
+    
+    // Operation types
+    enum operation-type {
+        create,
+        read,
+        update,
+        delete,
+        list-resources,
+        action,
+    }
+    
+    record operation-options {
+        dry-run: bool,
+        request-id: option<string>,
+        timeout-seconds: option<u32>,
+    }
+    
+    record operation-request {
+        op: operation-type,
+        resource-type: string,
+        payload: bytes,
+        options: operation-options,
+    }
+    
+    record operation-response {
+        success: bool,
+        data: option<bytes>,
+        error: option<error>,
+    }
+    
+    // Logging
+    enum log-level {
+        debug,
+        info,
+        warn,
+        error,
+    }
+    
+    // Resource management
+    record validation-result {
+        valid: bool,
+        diagnostics: list<diagnostic>,
+    }
+    
+    record diagnostic {
+        severity: log-level,
+        message: string,
+        field: option<string>,
+    }
+    
+    enum output-format {
+        json,
+        yaml,
+        toml,
+    }
+    
+    record resource-diff {
+        changes: list<field-change>,
+        requires-replacement: bool,
+    }
+    
+    record field-change {
+        field-path: string,
+        old-value: option<string>,
+        new-value: option<string>,
+    }
+    
+    record resource-reference {
+        resource-type: string,
+        resource-id: string,
+        name: option<string>,
+    }
+    
+    record resource-summary {
+        resource-type: string,
+        resource-id: string,
+        name: string,
+        tags: list<key-value>,
+    }
+    
+    // Plugin metadata
+    record endpoint-pattern {
+        method: string,
+        path-pattern: string,
+    }
+    
+    record resource-limit {
+        resource-type: string,
+        max-count: u32,
+    }
+    
+    record capability-requirements {
+        config-keys: list<string>,
+        optional-config: list<string>,
+        state-prefixes: list<string>,
+        provider-endpoints: list<endpoint-pattern>,
+        resource-types: list<string>,
+        resource-limits: list<resource-limit>,
+    }
+    
+    record plugin-metadata {
+        name: string,
+        version: string,
+        description: string,
+        requirements: capability-requirements,
+    }
+    
+    record schema-definition {
+        version: string,
+        resources: list<resource-schema>,
+    }
+    
+    record resource-schema {
+        name: string,
+        fields: bytes,  // JSON schema or similar
+    }
+}
+
+interface config {
+    use types.{error};
+    
+    // Get a configuration value by key
+    get-config: func(key: string) -> result<string, error>;
+    
+    // List all available configuration keys
+    list-config-keys: func() -> list<string>;
+}
+
+interface state {
+    use types.{bytes, error};
+    
+    // Basic CRUD operations
+    get-state: func(key: string) -> result<bytes, error>;
+    set-state: func(key: string, value: bytes) -> result<_, error>;
+    delete-state: func(key: string) -> result<_, error>;
+    list-state-keys: func() -> list<string>;
+    
+    // Advanced operations
+    atomic-compare-and-swap: func(
+        key: string,
+        expected: option<bytes>,
+        new-value: bytes
+    ) -> result<bool, error>;
+    
+    list-state-keys-with-prefix: func(prefix: string) -> list<string>;
+    
+    set-state-with-ttl: func(
+        key: string,
+        value: bytes,
+        ttl-seconds: u32
+    ) -> result<_, error>;
+}
+
+interface provider {
+    use types.{
+        bytes, error, operation-type, operation-options,
+        operation-request, operation-response
+    };
+    
+    // Single operation execution
+    execute-operation: func(
+        op: operation-type,
+        resource-type: string,
+        payload: bytes,
+        options: operation-options
+    ) -> result<bytes, error>;
+    
+    // Batch operations for efficiency
+    batch-execute: func(
+        operations: list<operation-request>
+    ) -> result<list<operation-response>, error>;
+}
+
+interface resources {
+    use types.{
+        bytes, error, validation-result, output-format,
+        resource-diff, resource-reference
+    };
+    
+    // Validate resource configuration
+    validate-resource: func(
+        resource-type: string,
+        data: bytes
+    ) -> result<validation-result, error>;
+    
+    // Transform between formats
+    transform-resource: func(
+        resource-type: string,
+        data: bytes,
+        format: output-format
+    ) -> result<bytes, error>;
+    
+    // Calculate differences
+    diff-resources: func(
+        resource-type: string,
+        current: bytes,
+        desired: bytes
+    ) -> result<resource-diff, error>;
+    
+    // Get dependency information
+    get-resource-dependencies: func(
+        resource-type: string,
+        data: bytes
+    ) -> result<list<resource-reference>, error>;
+}
+
+interface query {
+    use types.{bytes, error, resource-summary};
+    
+    // Query resources with filters
+    query-resources: func(
+        filter: string
+    ) -> result<list<resource-summary>, error>;
+    
+    // Get specific resource details
+    get-resource: func(
+        resource-type: string,
+        resource-id: string
+    ) -> result<bytes, error>;
+}
+
+interface observability {
+    use types.{log-level, key-value};
+    
+    // Structured logging
+    log: func(
+        level: log-level,
+        message: string,
+        fields: list<key-value>
+    );
+    
+    // Metrics
+    metric: func(
+        name: string,
+        value: float64,
+        tags: list<key-value>
+    );
+    
+    // Progress reporting for long operations
+    report-progress: func(
+        operation-id: string,
+        percent: u8,
+        message: string
+    );
+}
+
+// World definition - what CLI provides to plugins
+world plugin-runtime {
+    import config;
+    import state;
+    import provider;
+    import resources;
+    import query;
+    import observability;
+    
+    export plugin;
+}
+
+// Plugin interface - what plugins must implement
+interface plugin {
+    use types.{plugin-metadata, error, bytes, schema-definition};
+    
+    // Initialize plugin and declare capabilities
+    init: func() -> result<plugin-metadata, error>;
+    
+    // Main request handler
+    handle: func(
+        operation: string,
+        input: bytes
+    ) -> result<bytes, error>;
+    
+    // Get resource schemas
+    get-schema: func() -> result<schema-definition, error>;
+}
